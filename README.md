@@ -1,0 +1,22 @@
+# Restricted Flying
+Restricted Flying is a Minecraft Mod for Fabric 1.21 that prevents flying with elytras in certain dimensions!
+
+# Showcase
+[![Watch the video](https://img.youtube.com/vi/gNEDActiWOg/maxresdefault.jpg)](https://www.youtube.com/watch?v=gNEDActiWOg)
+
+# Commands
+Commands seem to be a bit contradictory, but the list of dimensions is actually the list of dimensions where flying is allowed. By default, this is empty, meaning that no dimensions are allowed to fly in. You can add dimensions to the list using the commands below.
+
+- `/nofly config reload` - Reloads the config file.
+- `/nofly config add <dimension>` - Adds a dimension to the allowed list.
+- `/nofly config remove <dimension>` - Removes a dimension from the allowed list.
+
+I intend on adding more commands and features in the future, but this will suffice for now.
+
+# Versions
+| Mod Version | Loader | Game Version(s) |
+|-------------|--------|-----------------|
+| 1.0.0       | Fabric | 1.21            |
+
+# Environment
+This is a server-side mod! It is not required to be downloaded client-side, unless you want to host a LAN world (or run this on your own world)

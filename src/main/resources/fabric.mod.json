@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "restricted-flying",
+	"version": "${version}",
+	"name": "Restricted Flying",
+	"description": "Restricts the use of elytras to certain dimensions. Be careful though, otherwise your elytra will be unequipped!",
+	"authors": [
+		"GalvinPython"
+	],
+	"contact": {
+		"homepage": "https://github.com/GalvinCraft/restricted-flying-fabric",
+		"sources": "https://github.com/GalvinCraft/restricted-flying-fabric",
+		"issues": "https://github.com/GalvinCraft/restricted-flying-fabric/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/restricted-flying/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"me.imgalvin.restrictedflying.RestrictedFlying"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
