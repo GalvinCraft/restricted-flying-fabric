@@ -156,7 +156,7 @@ public class RestrictedFlying implements ModInitializer {
                     for (String part : parts) {
                         Identifier id = Identifier.tryParse(part.trim());
                         if (id != null) {
-                            RegistryKey<World> key = RegistryKey.of(RegistryKey.ofRegistry(Identifier.of("minecraft", "dimension")), id);
+                            RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
                             allowedFlightDimensions.add(key);
                         }
                     }
@@ -184,7 +184,7 @@ public class RestrictedFlying implements ModInitializer {
                     for (String part : parts) {
                         Identifier id = Identifier.tryParse(part.trim());
                         if (id != null) {
-                            RegistryKey<World> key = RegistryKey.of(RegistryKey.ofRegistry(Identifier.of("minecraft", "dimension")), id);
+                            RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
                             allowedFlightDimensions.add(key);
                         }
                     }
