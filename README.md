@@ -10,13 +10,21 @@ Commands seem to be a bit contradictory, but the list of dimensions is actually 
 - `/nofly config reload` - Reloads the config file.
 - `/nofly config add <dimension>` - Adds a dimension to the allowed list.
 - `/nofly config remove <dimension>` - Removes a dimension from the allowed list.
+- `/nofly config show` - Shows all dimensions in the allowed list.
 
 I intend on adding more commands and features in the future, but this will suffice for now.
 
 # Versions
 | Mod Version | Loader | Game Version(s) |
 |-------------|--------|-----------------|
+| 1.1.0       | Fabric | 1.21            |
 | 1.0.0       | Fabric | 1.21            |
+
+## Changelog
+### 1.1.0
+- Fixed a bug where the config wouldn't be loaded on startup
+- New command: `/nofly config show` to show all dimensions in the allowed list
+- When doing `/nofly config add <dimension>`, it will now suggest dimensions that are in the list of dimensions
 
 # Environment
 This is a server-side mod! It is not required to be downloaded client-side, unless you want to host a LAN world (or run this on your own world)
