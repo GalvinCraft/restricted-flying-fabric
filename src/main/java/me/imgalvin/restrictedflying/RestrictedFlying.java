@@ -1,6 +1,5 @@
 package me.imgalvin.restrictedflying;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -34,12 +33,10 @@ public class RestrictedFlying implements ModInitializer {
 
     private static Path configPath;
 
-    private static final SuggestionProvider<ServerCommandSource> DIMENSION_SUGGESTIONS = (context, builder) -> {
-        return CommandSource.suggestIdentifiers(
-                context.getSource().getServer().getRegistryManager().get(RegistryKeys.WORLD).getIds(),
-                builder
-        );
-    };
+    private static final SuggestionProvider<ServerCommandSource> DIMENSION_SUGGESTIONS = (context, builder) -> CommandSource.suggestIdentifiers(
+            context.getSource().getServer().getRegistryManager().get(RegistryKeys.WORLD).getIds(),
+            builder
+    );
 
 
     @Override
