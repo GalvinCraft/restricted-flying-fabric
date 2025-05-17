@@ -111,7 +111,7 @@ public class RestrictedFlying implements ModInitializer {
                                                     saveConfig(ctx.getSource());
                                                     ctx.getSource().sendFeedback(() -> Text.literal("Removed " + id + " from allowed flight dimensions."), false);
                                                 } else {
-                                                    ctx.getSource().sendFeedback(() -> Text.literal("Dimension " + id + " is already allowed."), false);
+                                                    ctx.getSource().sendFeedback(() -> Text.literal("Dimension " + id + " is not in the allowed list."), false);
                                                 }
                                                 return 1;
                                             })
