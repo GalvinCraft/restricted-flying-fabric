@@ -109,7 +109,7 @@ public class RestrictedFlying implements ModInitializer {
                                                 RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
                                                 if (allowedFlightDimensions.remove(key)) {
                                                     saveConfig(ctx.getSource());
-                                                    ctx.getSource().sendFeedback(() -> Text.literal("Added " + id + " to allowed flight dimensions."), false);
+                                                    ctx.getSource().sendFeedback(() -> Text.literal("Removed " + id + " from allowed flight dimensions."), false);
                                                 } else {
                                                     ctx.getSource().sendFeedback(() -> Text.literal("Dimension " + id + " is already allowed."), false);
                                                 }
