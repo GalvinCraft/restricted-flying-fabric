@@ -17,10 +17,15 @@ I intend on adding more commands and features in the future, but this will suffi
 # Versions
 | Mod Version | Loader | Game Version(s) |
 |-------------|--------|-----------------|
-| 1.1.0       | Fabric | 1.21            |
-| 1.0.0       | Fabric | 1.21            |
+| 1.1.1       | Fabric | 1.21.5          |
+| 1.1.1       | Fabric | 1.21-1.21.4     |
+| 1.1.0       | Fabric | 1.21-1.21.4     |
+| 1.0.0       | Fabric | 1.21-1.21.4     |
 
 ## Changelog
+### 1.1.1
+- Fixed crash on 1.21.5
+
 ### 1.1.0
 - Fixed a bug where the config wouldn't be loaded on startup
 - New command: `/nofly config show` to show all dimensions in the allowed list
