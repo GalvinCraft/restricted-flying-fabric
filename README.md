@@ -1,4 +1,6 @@
 # Restricted Flying
+[![Supported versions](https://modrinth-shields.imgalvin.me/badge/restrictedflying)](https://modrinth.com/mod/restrictedflying)
+
 Restricted Flying is a Minecraft Mod for Fabric 1.21 that prevents flying with elytras in certain dimensions!
 
 # Showcase
