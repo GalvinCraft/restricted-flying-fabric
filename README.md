@@ -20,6 +20,12 @@ I intend on adding more commands and features in the future, but this will suffi
 Restricted flying supports Fabric and Quilt on all versions from 1.21 and above!
 
 ## Changelog
+### 1.1.4 (1.21.11)
+- Fixed crash on 1.21.11 due to command updates
+
+### 1.1.3 (1.21.10)
+- Added 1.21.10 compatibility
+
 ### 1.1.2 (1.21.9)
 - Fixed crash on 1.21.9
 
