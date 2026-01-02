@@ -43,7 +43,7 @@ public class RestrictedFlying implements ModInitializer {
         ServerTickEvents.END_WORLD_TICK.register(world -> {
             for (ServerPlayerEntity player : world.getPlayers()) {
                 if (player.isGliding()) {
-                    RegistryKey<World> dimension = player.getWorld().getRegistryKey();
+                    RegistryKey<World> dimension = player.getEntityWorld().getRegistryKey();
                     if (!allowedFlightDimensions.contains(dimension)) {
                         player.stopGliding();
                         player.sendMessage(Text.literal("Elytra flight is disabled in this dimension."), true);

@@ -17,14 +17,12 @@ Commands seem to be a bit contradictory, but the list of dimensions is actually 
 I intend on adding more commands and features in the future, but this will suffice for now.
 
 # Versions
-| Mod Version | Loader | Game Version(s) |
-|-------------|--------|-----------------|
-| 1.1.1       | Fabric | 1.21.5          |
-| 1.1.1       | Fabric | 1.21-1.21.4     |
-| 1.1.0       | Fabric | 1.21-1.21.4     |
-| 1.0.0       | Fabric | 1.21-1.21.4     |
+Restricted flying supports Fabric and Quilt on all versions from 1.21 and above!
 
 ## Changelog
+### 1.1.2 (1.21.9)
+- Fixed crash on 1.21.9
+
 ### 1.1.1
 - Fixed crash on 1.21.5
 
