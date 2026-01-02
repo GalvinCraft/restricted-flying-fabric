@@ -43,7 +43,7 @@ public class RestrictedFlying implements ModInitializer {
         ServerTickEvents.END_WORLD_TICK.register(world -> {
             for (ServerPlayerEntity player : world.getPlayers()) {
                 if (player.isGliding()) {
-                    RegistryKey<World> dimension = player.getWorld().getRegistryKey();
+                    RegistryKey<World> dimension = player.getEntityWorld().getRegistryKey();
                     if (!allowedFlightDimensions.contains(dimension)) {
                         player.stopGliding();
                         player.sendMessage(Text.literal("Elytra flight is disabled in this dimension."), true);
@@ -62,7 +62,9 @@ public class RestrictedFlying implements ModInitializer {
         // Register commands
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(CommandManager.literal("noflying")
                 .then(CommandManager.literal("config")
-                        .requires(source -> source.hasPermissionLevel(4)) // Admin only
+                        // Require admin
+                        // Normally we would ask for GAMEMASTERS_CHECK, but this makes changes to the world as a whole, so this is more appropriate
+                        .requires(CommandManager.requirePermissionLevel(CommandManager.ADMINS_CHECK))
                         .then(CommandManager.literal("reload")
                                 .executes(ctx -> {
                                     loadConfig(ctx.getSource());
