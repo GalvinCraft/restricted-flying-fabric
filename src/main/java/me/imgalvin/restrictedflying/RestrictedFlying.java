@@ -94,9 +94,9 @@ public class RestrictedFlying implements ModInitializer {
                                                             ResourceKey<Level> resourceKey = serverLevel.dimension();
                                                             if (allowedFlightDimensions.remove(resourceKey)) {
                                                                 saveConfig(ctx.getSource());
-                                                                ctx.getSource().sendSuccess(() -> Component.literal("Added " + resourceKey + " to allowed flight dimensions."), false);
+                                                                ctx.getSource().sendSuccess(() -> Component.literal("Removed " + resourceKey + " from allowed flight dimensions."), false);
                                                             } else {
-                                                                ctx.getSource().sendFailure(Component.literal("Dimension " + resourceKey + " is already allowed."));
+                                                                ctx.getSource().sendFailure(Component.literal("Dimension " + resourceKey + " is not in the allowed flight dimensions list."));
                                                             }
                                                             return 1;
                                                         })
