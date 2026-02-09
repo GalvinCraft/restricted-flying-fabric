@@ -1,24 +1,20 @@
 package me.imgalvin.restrictedflying;
 
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.WorldSavePath;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
-import net.minecraft.item.ItemStack;
-import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.DimensionArgument;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 
+import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,33 +22,36 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
+import static net.minecraft.commands.arguments.DimensionArgument.getDimension;
+
 public class RestrictedFlying implements ModInitializer {
     public static final String MOD_ID = "restricted-flying";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static Set<RegistryKey<World>> allowedFlightDimensions = new HashSet<>();
+    public static Set<ResourceKey<Level>> allowedFlightDimensions = new HashSet<>();
 
     private static Path configPath;
 
-    private static final SuggestionProvider<ServerCommandSource> DIMENSION_SUGGESTIONS = (context, builder) -> CommandSource.suggestIdentifiers(context.getSource().getServer().getWorldRegistryKeys().stream().map(RegistryKey::getValue), builder);
+//    private static final SuggestionProvider<ServerCommandSource> DIMENSION_SUGGESTIONS = (context, builder) -> CommandSource.suggestIdentifiers(context.getSource().getServer().getWorldRegistryKeys().stream().map(RegistryKey::getValue), builder);
 
     @Override
     public void onInitialize() {
         LOGGER.info("Restricted Flying mod is initializing!");
 
         // Register flight restriction logic
-        ServerTickEvents.END_WORLD_TICK.register(world -> {
-            for (ServerPlayerEntity player : world.getPlayers()) {
-                if (player.isGliding()) {
-                    RegistryKey<World> dimension = player.getEntityWorld().getRegistryKey();
+        // TODO: For performance reasons, we should schedule this task to run every second instead of every tick
+        ServerTickEvents.END_LEVEL_TICK.register(world -> {
+            for (ServerPlayer player : world.players()) {
+                if (player.isFallFlying()) {
+                    ResourceKey<Level> dimension = player.level().getLevel().dimension();
                     if (!allowedFlightDimensions.contains(dimension)) {
-                        player.stopGliding();
-                        player.sendMessage(Text.literal("Elytra flight is disabled in this dimension."), true);
+                        player.stopFallFlying();
+                        player.sendSystemMessage(Component.literal("Elytra flight is disabled in this dimension."), true);
 
-                        ItemStack chestItem = player.getEquippedStack(EquipmentSlot.CHEST);
+                        net.minecraft.world.item.ItemStack chestItem = player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST);
                         if (chestItem.getItem().toString().toLowerCase().contains("elytra")) {
-                            ItemStack elytraCopy = chestItem.copy();
-                            player.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
-                            player.dropItem(elytraCopy, false, true);
+                            net.minecraft.world.item.ItemStack elytraCopy = chestItem.copy();
+                            player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY);
+                            player.drop(elytraCopy, false, true);
                         }
                     }
                 }
@@ -60,71 +59,63 @@ public class RestrictedFlying implements ModInitializer {
         });
 
         // Register commands
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(CommandManager.literal("noflying")
-                .then(CommandManager.literal("config")
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(Commands.literal("noflying")
+                .then(Commands.literal("config")
                         // Require admin
                         // Normally we would ask for GAMEMASTERS_CHECK, but this makes changes to the world as a whole, so this is more appropriate
-                        .requires(CommandManager.requirePermissionLevel(CommandManager.ADMINS_CHECK))
-                        .then(CommandManager.literal("reload")
+                        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
+                        .then(Commands.literal("reload")
                                 .executes(ctx -> {
                                     loadConfig(ctx.getSource());
                                     return 1;
                                 })
                         )
-                        .then(CommandManager.literal("add")
-                                .then(CommandManager.argument("dimension", IdentifierArgumentType.identifier())
-                                        .suggests(DIMENSION_SUGGESTIONS)
+                        .then(Commands.literal("add")
+                                .then(Commands.argument("dimension", DimensionArgument.dimension())
+//                                        .suggests(DIMENSION_SUGGESTIONS)
                                         .executes(ctx -> {
-                                            Identifier id = IdentifierArgumentType.getIdentifier(ctx, "dimension");
-                                            if (id == null) {
-                                                ctx.getSource().sendError(Text.literal("Invalid dimension identifier."));
-                                                return 0;
-                                            }
-                                            RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
-                                            if (allowedFlightDimensions.add(key)) {
+                                            ServerLevel serverLevel = getDimension(ctx, "dimension");
+                                            ResourceKey<Level> resourceKey = serverLevel.dimension();
+                                            if (allowedFlightDimensions.add(resourceKey)) {
                                                 saveConfig(ctx.getSource());
-                                                ctx.getSource().sendFeedback(() -> Text.literal("Added " + id + " to allowed flight dimensions."), false);
+                                                ctx.getSource().sendSuccess(() -> Component.literal("Added " + resourceKey + " to allowed flight dimensions."), false);
                                             } else {
-                                                ctx.getSource().sendFeedback(() -> Text.literal("Dimension " + id + " is already allowed."), false);
+                                                ctx.getSource().sendFailure(Component.literal("Dimension " + resourceKey + " is already allowed."));
                                             }
                                             return 1;
                                         })
                                 )
                         )
-                        .then(CommandManager.literal("remove")
-                                .then(CommandManager.argument("dimension", IdentifierArgumentType.identifier())
-                                        .suggests(DIMENSION_SUGGESTIONS)
-                                        .executes(ctx -> {
-                                            Identifier id = IdentifierArgumentType.getIdentifier(ctx, "dimension");
-                                            if (id == null) {
-                                                ctx.getSource().sendError(Text.literal("Invalid dimension identifier."));
-                                                return 0;
-                                            }
-                                            RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
-                                            if (allowedFlightDimensions.remove(key)) {
-                                                saveConfig(ctx.getSource());
-                                                ctx.getSource().sendFeedback(() -> Text.literal("Removed " + id + " from allowed flight dimensions."), false);
-                                            } else {
-                                                ctx.getSource().sendFeedback(() -> Text.literal("Dimension " + id + " is not in the allowed list."), false);
-                                            }
-                                            return 1;
-                                        })
-                                )
+                        .then(Commands.literal("remove")
+                                        .then(Commands.argument("dimension", DimensionArgument.dimension())
+//                                        .suggests(DIMENSION_SUGGESTIONS)
+                                                        .executes(ctx -> {
+                                                            ServerLevel serverLevel = getDimension(ctx, "dimension");
+                                                            ResourceKey<Level> resourceKey = serverLevel.dimension();
+                                                            if (allowedFlightDimensions.remove(resourceKey)) {
+                                                                saveConfig(ctx.getSource());
+                                                                ctx.getSource().sendSuccess(() -> Component.literal("Added " + resourceKey + " to allowed flight dimensions."), false);
+                                                            } else {
+                                                                ctx.getSource().sendFailure(Component.literal("Dimension " + resourceKey + " is already allowed."));
+                                                            }
+                                                            return 1;
+                                                        })
+                                        )
                         )
-                        .then(CommandManager.literal("show")
+                        .then(Commands.literal("show")
                                 .executes(ctx -> {
                                     StringBuilder sb = new StringBuilder("Allowed flight dimensions: ");
                                     if (allowedFlightDimensions.isEmpty()) {
-                                        ctx.getSource().sendFeedback(() -> Text.literal("No flying is allowed in any dimensions").formatted(Formatting.RED), false);
+                                        ctx.getSource().sendSystemMessage(Component.literal("No flying is allowed in any dimensions").withStyle(ChatFormatting.RED));
                                         return 1;
                                     }
-                                    for (RegistryKey<World> key : allowedFlightDimensions) {
-                                        sb.append(key.getValue().toString()).append(", ");
+                                    for (ResourceKey<Level> key : allowedFlightDimensions) {
+                                        sb.append(key.toString()).append(", ");
                                     }
                                     if (!sb.isEmpty()) {
                                         sb.setLength(sb.length() - 2); // Remove trailing comma and space
                                     }
-                                    ctx.getSource().sendFeedback(() -> Text.literal(sb.toString()), false);
+                                    ctx.getSource().sendSystemMessage((Component.literal(sb.toString())));
                                     return 1;
                                 })
                         )
@@ -133,10 +124,10 @@ public class RestrictedFlying implements ModInitializer {
     }
 
     // Config
-    private static void loadConfig(ServerCommandSource source) {
+    private static void loadConfig(net.minecraft.commands.CommandSourceStack source) {
         try {
             if (configPath == null) {
-                Path worldDir = source.getServer().getSavePath(WorldSavePath.ROOT);
+                Path worldDir = source.getServer().getWorldPath(LevelResource.ROOT);
                 configPath = worldDir.resolve("allowed_flight.txt");
             }
 
@@ -148,17 +139,19 @@ public class RestrictedFlying implements ModInitializer {
                     String[] parts = content.split(",");
                     for (String part : parts) {
                         Identifier id = Identifier.tryParse(part.trim());
-                        if (id != null) {
-                            RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
-                            allowedFlightDimensions.add(key);
+                        if (id == null) {
+                            LOGGER.warn("Invalid dimension ID in config: {}", part.trim());
+                            continue;
                         }
+                        ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, id);
+                        allowedFlightDimensions.add(key);
                     }
                 }
             }
-            source.sendFeedback(() -> Text.literal("Flight config reloaded."), false);
+            source.sendSystemMessage(Component.literal("Flight config reloaded."));
         } catch (IOException e) {
             LOGGER.error("Failed to load config", e);
-            source.sendError(Text.literal("Error loading config."));
+            source.sendSystemMessage(Component.literal("Error loading config.").withStyle(ChatFormatting.RED));
         }
     }
 
@@ -176,10 +169,12 @@ public class RestrictedFlying implements ModInitializer {
                     String[] parts = content.split(",");
                     for (String part : parts) {
                         Identifier id = Identifier.tryParse(part.trim());
-                        if (id != null) {
-                            RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, id);
-                            allowedFlightDimensions.add(key);
+                        if (id == null) {
+                            LOGGER.warn("Invalid dimension ID in config: {}", part.trim());
+                            continue;
                         }
+                        ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, id);
+                        allowedFlightDimensions.add(key);
                     }
                 }
             }
@@ -188,23 +183,24 @@ public class RestrictedFlying implements ModInitializer {
         }
     }
 
-    private static void saveConfig(ServerCommandSource source) {
+    private static void saveConfig(net.minecraft.commands.CommandSourceStack source) {
         try {
             if (configPath == null) {
-                Path worldDir = source.getServer().getSavePath(WorldSavePath.ROOT);
+                Path worldDir = source.getServer().getWorldPath(LevelResource.ROOT);
                 configPath = worldDir.resolve("allowed_flight.txt");
             }
 
             List<String> ids = new ArrayList<>();
-            for (RegistryKey<World> key : allowedFlightDimensions) {
-                ids.add(key.getValue().toString());
+            for (ResourceKey<Level> key : allowedFlightDimensions) {
+                LOGGER.info(String.valueOf(key));
+                ids.add(key.identifier().toString());
             }
 
             Files.writeString(configPath, String.join(",", ids), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            source.sendFeedback(() -> Text.literal("Config saved."), false);
+            source.sendSystemMessage(Component.literal("Config saved."));
         } catch (IOException e) {
             LOGGER.error("Failed to save config", e);
-            source.sendError(Text.literal("Error saving config."));
+            source.sendSystemMessage(Component.literal("Error saving config.").withStyle(ChatFormatting.RED));
         }
     }
 }
